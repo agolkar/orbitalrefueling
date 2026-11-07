@@ -3,7 +3,7 @@
 // departure from the docked state, arm geometry and collisions, the de-spin of the docked stack,
 // and the three docked levels won by a scripted player in every scenario. No test framework.
 
-import { ORBITS, TANK, ARM, CHALLENGE, CHASER, CLIENT } from '../src/config.js';
+import { ORBITS, TANK, ARM, CHALLENGE, CHASER, CLIENT_MODELS } from '../src/config.js';
 import {
   clientPressurePa,
   maxClientMassKg,
@@ -366,9 +366,12 @@ export const tests = [
       const scen = CHALLENGE.scenarios.find((s) => s.rollControl);
       const level = levelFor(4, scen);
       const d = createDespin(level, 50);
-      const alpha = CHASER.rcsRotationTorqueNm / (CHASER.inertiaKgM2[0] + CLIENT.inertiaKgM2[0]);
+      const alpha = CHASER.rcsRotationTorqueNm / (CHASER.inertiaKgM2[0] + CLIENT_MODELS[scen.client].inertiaKgM2[0]);
       assertClose(d.durationS, scen.spinDegS * DEG / alpha, 1e-9, 'de-spin time');
-      assertTrue(d.durationS > 10 && d.durationS < 16, `about 13 s, got ${d.durationS}`);
+      assertTrue(d.durationS > 8 && d.durationS < 11, `about 9 s, got ${d.durationS}`);
+      // The non-cooperative client spins about its major axis of inertia (a stable spin).
+      const I = CLIENT_MODELS[scen.client].inertiaKgM2;
+      assertTrue(I[0] > I[1] && I[0] > I[2], 'the engine axis is the major axis');
       assertClose(despinAngleRad(d), spinAngleRad(level, 50), 1e-12, 'continuous at hard capture');
       stepDespin(d, 0.01);
       assertClose((despinAngleRad(d) - spinAngleRad(level, 50)) / 0.01, scen.spinDegS * DEG, 1e-4, 'initial rate');

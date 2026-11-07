@@ -94,7 +94,7 @@ const sceneRoot = buildScene({ orbit, renderer, startLocalSolarTimeHours: scenar
 const { backgroundScene, backgroundCamera, foregroundScene, foregroundCamera, sunLight, updateEnvironment } = sceneRoot;
 
 const chaser = buildChaser();
-const target = buildTarget();
+const target = buildTarget(scenario.client);
 foregroundScene.add(chaser.root);
 foregroundScene.add(target.root);
 // Refuelling arm on the servicer docking plate (levels 5 to 7; folded during the capture levels).
@@ -327,6 +327,7 @@ function setScenario(id) {
   orbit = ORBITS[scenario.orbit];
   n = orbit.nRadPerS;
   sceneRoot.setOrbit(orbit, scenarioStartHours(scenario));
+  target.setDesign(scenario.client);
   openMenu();
 }
 

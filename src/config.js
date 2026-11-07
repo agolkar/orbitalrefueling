@@ -95,6 +95,16 @@ export const CLIENT = {
   activeAttitudeControlUntilHardCapture: true
 };
 
+// The three fictional clients, one per scenario, share the docking interface, the mass at docking
+// and the tank; their shape and inertia differ (mass models in ASSUMPTIONS.md, Clients). Inertia
+// about the client CM in LVLH axes (x along the engine axis).
+export const CLIENT_MODELS = {
+  relay: { name: 'retired relay satellite', inertiaKgM2: [23600, 24200, 3500], spanM: 30.9 }, // kg m^2, m
+  observer: { name: 'Earth observation satellite', inertiaKgM2: [4700, 5900, 2900], spanM: 10.8 }, // kg m^2, m
+  // The engine axis is the major axis (15,200 > 14,000 > 5,300): a spin about it is stable.
+  derelict: { name: 'communications satellite without attitude control', inertiaKgM2: [15200, 14000, 5300], spanM: 22.7 } // kg m^2, m
+};
+
 export const CAPTURE = {
   laeEngineLengthM: 0.55, // m
   laeExitDiameterM: 0.28, // m
@@ -322,6 +332,7 @@ export const CHALLENGE = {
   scenarios: [
     {
       id: 'geo',
+      client: 'relay', // CLIENT_MODELS key: the client's model and inertia
       name: 'Retired relay satellite',
       where: 'GEO graveyard orbit',
       orbit: 'GEO',
@@ -343,6 +354,7 @@ export const CHALLENGE = {
     },
     {
       id: 'leo',
+      client: 'observer', // CLIENT_MODELS key: the client's model and inertia
       name: 'Earth observer',
       where: 'low Earth orbit, 500 km',
       orbit: 'LEO',
@@ -362,6 +374,7 @@ export const CHALLENGE = {
     },
     {
       id: 'tumble',
+      client: 'derelict', // CLIENT_MODELS key: the client's model and inertia
       name: 'Non-cooperative satellite',
       where: 'GEO graveyard orbit',
       orbit: 'GEO',
@@ -378,7 +391,8 @@ export const CHALLENGE = {
       dockedNote: 'After hard capture the servicer stopped the spinning stack with its roll thrusters: the levels ' +
         'docked to this client start from a still stack.',
       story: 'A communications satellite in the graveyard orbit lost its attitude control after an onboard ' +
-        'fault and no longer answers commands. It spins slowly about its engine axis while the axis wobbles. ' +
+        'fault and no longer answers commands. Its solar wings stopped at different angles, and it spins ' +
+        'slowly about its engine axis while the axis wobbles. ' +
         'The servicer\'s guidance keeps the probe pointed at the nozzle, but before capture you must match ' +
         'the spin: hold U or O to roll until the client stops turning in the docking camera, then capture as ' +
         'usual. A capture with the vehicles still turning would break the probe.'
@@ -497,6 +511,7 @@ export const CONFIG = {
   ORBITS,
   CHASER,
   CLIENT,
+  CLIENT_MODELS,
   CAPTURE,
   ARM,
   TANK,

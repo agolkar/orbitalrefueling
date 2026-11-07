@@ -6,7 +6,7 @@
 // It also models the de-spin of the docked stack after hard capture in a scenario with a spinning
 // client, so the docked levels 5 to 7 start from a still stack.
 
-import { CAPTURE, CHASER, CLIENT, CHALLENGE, START_ATTITUDE, DEG_TO_RAD, RAD_TO_DEG } from '../config.js';
+import { CAPTURE, CHASER, CLIENT, CLIENT_MODELS, CHALLENGE, START_ATTITUDE, DEG_TO_RAD, RAD_TO_DEG } from '../config.js';
 import { ChaserVehicle, quatMultiply, quatRotateVec, quatFromAxisAngle, quatNormalize } from '../physics/vehicle.js';
 import { createFlight } from '../physics/flight.js';
 
@@ -53,6 +53,8 @@ export function levelFor(id, scenario = CHALLENGE.scenarios[0]) {
     ...base,
     budgetMps: base.budgetMps * (scenario.budgetScale || 1),
     scenarioId: scenario.id,
+    client: scenario.client || 'relay',
+    clientInertiaKgM2: (CLIENT_MODELS[scenario.client] || { inertiaKgM2: CLIENT.inertiaKgM2 }).inertiaKgM2,
     spinDegS: docked ? 0 : scenario.spinDegS || 0,
     tumbleConeDeg: docked ? 0 : scenario.tumbleConeDeg || 0,
     tumblePeriodS: docked ? 0 : scenario.tumblePeriodS || 0,
@@ -438,17 +440,24 @@ export function feedback(ch) {
 // roll couple against the spin; the stack (servicer and client roll inertias about the common
 // docking axis) slows down at constant deceleration until it holds still.
 
-export const DESPIN_ACCEL_RADS2 = CHASER.rcsRotationTorqueNm / (CHASER.inertiaKgM2[0] + CLIENT.inertiaKgM2[0]);
+// Deceleration of the stack (rad/s^2) with the client of the level (its roll inertia).
+export function despinAccelRadS2(level) {
+  const client = (level && level.clientInertiaKgM2) || CLIENT.inertiaKgM2;
+  return CHASER.rcsRotationTorqueNm / (CHASER.inertiaKgM2[0] + client[0]);
+}
+export const DESPIN_ACCEL_RADS2 = despinAccelRadS2(null);
 
 // t0: level time of the hard capture. The spin angle at that time continues smoothly.
 export function createDespin(level, t0) {
   const rate0 = (level.spinDegS || 0) * DEG_TO_RAD;
+  const accel = despinAccelRadS2(level);
   return {
     t0,
     t: 0,
     rate0,
+    accel,
     angle0: spinAngleRad(level, t0),
-    durationS: rate0 / DESPIN_ACCEL_RADS2,
+    durationS: rate0 / accel,
     done: rate0 === 0
   };
 }
@@ -461,13 +470,13 @@ export function stepDespin(d, dtS) {
 }
 
 export function despinRateRadS(d) {
-  return Math.max(0, d.rate0 - DESPIN_ACCEL_RADS2 * d.t);
+  return Math.max(0, d.rate0 - d.accel * d.t);
 }
 
 // Spin angle of the stack during the de-spin (rad), for clientQuat and attachedAttitude.
 export function despinAngleRad(d) {
   const t = Math.min(d.t, d.durationS);
-  return d.angle0 + d.rate0 * t - 0.5 * DESPIN_ACCEL_RADS2 * t * t;
+  return d.angle0 + d.rate0 * t - 0.5 * d.accel * t * t;
 }
 
 export function despinText(d) {

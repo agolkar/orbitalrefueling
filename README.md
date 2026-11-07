@@ -58,8 +58,8 @@ The best score of each level and scenario stays in the browser.
 | Scenario | Orbit | Client | The time limit stands for |
 |---|---|---|---|
 | Retired relay satellite | Graveyard orbit 290 km above the geostationary belt; one orbit lasts 24.2 h | A communications satellite at the end of its life, still holding its attitude | The Sun moving into the docking camera's field of view |
-| Earth observer | Circular low Earth orbit at 500 km, 51.6° inclination; one orbit lasts 94.6 min | An Earth observation satellite short of propellant; the sideways drift is 15 times stronger and the Earth fills the background | The end of the ground-station pass |
-| Non-cooperative satellite | Graveyard orbit | A satellite that lost attitude control: it spins at 1.2°/s about its engine axis while the axis wobbles 1° every 120 s | The Sun in the docking camera |
+| Earth observer | Circular low Earth orbit at 500 km, 51.6° inclination; one orbit lasts 94.6 min | An Earth observation satellite short of propellant, with a telescope looking at the Earth; the sideways drift is 15 times stronger and the Earth fills the background | The end of the ground-station pass |
+| Non-cooperative satellite | Graveyard orbit | An older communications satellite that lost attitude control: its solar wings stopped at different angles, and it spins at 1.2°/s about its engine axis while the axis wobbles 1° every 120 s | The Sun in the docking camera |
 
 ### Levels
 
@@ -88,7 +88,7 @@ and down arrows, the number keys or a click; read the brief and press SPACE.
   axis, speed, alignment and spin), SPACE extends the probe into the nozzle: its fingers open in the
   combustion chamber (soft capture) and the probe pulls the two spacecraft together (hard capture).
   With the non-cooperative satellite, hold U or O to roll until the client stops turning in the
-  docking camera; after hard capture the servicer stops the spinning stack in about 13 s.
+  docking camera; after hard capture the servicer stops the spinning stack in about 9 s.
 - **Connect (level 5).** The arrow keys move the tool across the docking axis as seen in the tool
   camera, W lowers it, S raises it, SHIFT slows every motion to a fifth. Touch the cap below 1 cm/s
   and press SPACE to unscrew it; touch the valve below 1 cm/s and press SPACE to mate. Touching the
@@ -169,6 +169,10 @@ The sound starts with the first key press or click (browsers keep a page silent 
 <td width="50%"><img src="docs/images/approach_geo.jpg" alt="Approach in the graveyard orbit"><br><em>Level 1 in the graveyard orbit, 2.4 m from the ring, closing at 5.4 cm/s.</em></td>
 </tr>
 <tr>
+<td><img src="docs/images/approach_tumble.jpg" alt="The non-cooperative client"><br><em>The non-cooperative satellite: gold bus, a large reflector, wings stopped at different angles.</em></td>
+<td><img src="docs/images/depart_leo.jpg" alt="The Earth observer docked"><br><em>Level 7 with the Earth observer: the servicer docked on top, the telescope looking at the Earth below.</em></td>
+</tr>
+<tr>
 <td><img src="docs/images/docking_camera_tumble.jpg" alt="Docking camera on the spinning client"><br><em>Docking camera on the non-cooperative satellite: the client turns at 1.2°/s and the pilot must roll with it.</em></td>
 <td><img src="docs/images/capture_probe.jpg" alt="Probe extending into the nozzle"><br><em>GO for capture: the probe extends into the apogee engine nozzle (d = 1.11 m, 1.1 cm/s).</em></td>
 </tr>
@@ -239,6 +243,7 @@ flowchart TD
 | 5 | Refuelling and departure | The arm was redesigned so that it reaches the valve with the tool upright; the leak check moved before the valves |
 | After 5 | New requests | Outside view as the default camera; music, sound effects and a sparse voice |
 | 6 | Gamepad, menu, settings, performance | The gamepad was rewritten so that the pad works as the keys it stands for; the audio was replaced by the new sound |
+| After release | New request, made by Claude without DeepSeek | Each scenario got its own client: an Earth observation satellite in low Earth orbit and an older communications satellite for the non-cooperative case, on the same docking interface |
 
 Observations from the build:
 

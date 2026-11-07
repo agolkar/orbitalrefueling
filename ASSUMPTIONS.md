@@ -24,7 +24,7 @@ later decisions differ from the original prompt, those decisions replace the pro
   `README.md` and on the About screen says who did what. No file claims a copyright.
 - Refuelling is part of the fictional mission: a probe-and-stanchion docking followed by a
   propellant transfer through a service valve.
-- Both spacecraft are procedural three.js geometry. The external assets are the Earth texture
+- All spacecraft are procedural three.js geometry. The external assets are the Earth texture
   `assets/earth_day.jpg` (NASA Blue Marble, public domain; a procedural Earth is used when it is
   missing) and the voice lines `assets/voice/*.mp3`, rendered by `tools/make_voice.py` (section
   Sound).
@@ -61,11 +61,29 @@ later decisions differ from the original prompt, those decisions replace the pro
 
 ## Spacecraft mass and inertia
 
-- Client (fictional): dry mass 2,090 kg; mass at docking 2,120 kg with 30 kg in the transfer tank.
-  Simple mass model: bus 1,830 kg (propellant included) as a 3.5 x 2.8 x 2.8 m box along LVLH x,
-  y, z; two 120 kg wings as uniform rods from 1.4 m to 15.45 m along +/-z, 2.5 m wide; reflectors of
-  32 kg at (-1.15, 2.4, 0.3) m and 18 kg at (-0.55, -2.15, -0.4) m. This gives
-  `(Ixx, Iyy, Izz) = (23,600, 24,200, 3,500) kg m^2` in LVLH axes, with the CM at the bus centre.
+- Clients (fictional), one per scenario. All three have a dry mass of 2,090 kg and 2,120 kg at
+  docking with 30 kg in the transfer tank, the same tank and the same docking interface, so the
+  docked levels play the same in every scenario. Their shape and inertia differ (`CLIENT_MODELS`
+  in `src/config.js`; inertia about the CM in LVLH axes, x along the engine axis).
+- Retired relay satellite (scenario Retired relay satellite): bus 1,830 kg (propellant included)
+  as a 3.5 x 2.8 x 2.8 m box along LVLH x, y, z; two 120 kg wings as uniform rods from 1.4 m to
+  15.45 m along +/-z, 2.5 m wide; reflectors of 32 kg at (-1.15, 2.4, 0.3) m and 18 kg at
+  (-0.55, -2.15, -0.4) m. This gives `(Ixx, Iyy, Izz) = (23,600, 24,200, 3,500) kg m^2`, with the
+  CM at the bus centre.
+- Earth observation satellite (scenario Earth observer): bus 1,580 kg as a 2.3 x 2.4 x 2.4 m box
+  from x = -0.55 m to the aft face at 1.75 m; under it a 400 kg telescope (radius 0.72 m, 1.45 m
+  long), a 25 kg sunshade and a 15 kg interface plate; one 80 kg wing of three panels from 2.2 m to
+  9.55 m along -z; a 15 kg downlink dish and a 5 kg magnetometer. This gives about
+  `(4,700, 5,900, 2,900) kg m^2`. The single wing and the telescope put the CM about 0.2 m from the
+  bus centre; the game keeps the CM on the engine axis.
+- Communications satellite without attitude control (scenario Non-cooperative satellite): bus
+  1,778 kg as a 3.5 x 3.4 x 2.4 m box; two 105 kg wings of three 2.6 x 3.0 m panels from 2.2 m to
+  11.35 m along +/-z, stopped at 0.7 rad and 1.2 rad about z (turned over by half a turn, which
+  leaves the inertia unchanged); a 55 kg reflector 4.8 m out along +y on a 12 kg boom; a 25 kg
+  antenna panel on -y; a 30 kg tower and 10 kg of horns on the Earth deck. This gives about
+  `(15,200, 14,000, 5,300) kg m^2`: the engine axis is the major axis, the stable spin axis of a
+  body that dissipates energy, and the principal axis lies about 1 deg from it, the size of the
+  scenario's wobble.
 - Servicer (fictional): dry mass 1,600 kg, own RCS propellant 150 kg, cargo propellant 300 kg. The
   bus mass used for inertia is 1,960 kg including propellant but excluding wings (2.5 x 2.0 x 2.0 m
   along body X, Y, Z); two 45 kg wings from 1.0 m to 9.5 m along body +/-Y bring the total to
@@ -159,13 +177,29 @@ later decisions differ from the original prompt, those decisions replace the pro
   the telescoping probe and three capture legs with graphite foot pads and amber boots. A docking
   camera pod above the probe, an LED illuminator below it, a lidar head on a short mast, two
   electric thruster heads and a small white dish at the rear, the refuelling arm base on the plate.
-- Client: a charcoal MLI bus (3.5 x 2.8 x 2.8 m) with silver OSR radiators on the north and south
-  faces and an amber band. On the aft face a bare aluminium launch adapter ring around a crinkled
-  foil heat shield, the apogee engine bell in dark niobium with an aluminium exit lip, the service
-  valve with an amber boot and a dark cap, amber corner RCS blocks and two omni antennas. On the
-  Earth deck feed horns and a small dish on a tower. Two unequal white reflectors on graphite hinge
-  arms (2.5 m and 1.6 m). Two wings of four 2.5 x 3.05 m panels on graphite V yokes.
-- Solar cells on both vehicles: dark violet cells with silver bus bars. Panel backs are grey.
+- Clients (`src/render/clients.js`): all three carry the same docking interface on the aft face, a
+  bare aluminium launch adapter ring around a crinkled foil heat shield, the engine bell in dark
+  niobium with an aluminium exit lip and the service valve with an amber boot and a red cap. The
+  menu switches the model with the scenario.
+- Retired relay satellite: a charcoal MLI bus (3.5 x 2.8 x 2.8 m) with silver OSR radiators on the
+  north and south faces and an amber band; amber corner RCS blocks and two omni antennas on the aft
+  face; feed horns and a small dish on a tower on the Earth deck; two unequal white reflectors on
+  graphite hinge arms (2.5 m and 1.6 m); two wings of four 2.5 x 3.05 m panels on graphite V yokes.
+- Earth observation satellite: a 2.3 x 2.4 x 2.4 m bus in silver MLI with white radiators on the
+  +/-y faces and a dark seam between platform and payload; under it a 1.45 m telescope barrel in
+  black MLI with aluminium rings, a gold interface plate and a white sunshade cut at an angle,
+  looking at the Earth; one wing of three 1.9 x 2.4 m panels on a single strut on -z; two star
+  trackers on +z, a downlink dish on a nadir corner, a magnetometer on a 1.6 m boom, two GNSS
+  antennas on the zenith deck away from the arm, small corner thrusters. It keeps the docking
+  interface of the game so that every level plays the same; a real satellite of this class would
+  more likely carry only small thrusters and no large engine nozzle.
+- Communications satellite without attitude control: a 3.5 x 3.4 x 2.4 m bus in gold MLI with a
+  black skirt at the Earth end and white radiators with heat-pipe lines on the north and south
+  faces; an antenna tower with a dish and four horns on the Earth deck; a 3.2 m reflector on a
+  3 m boom along +y and a flat antenna panel on -y; two wings of three 2.6 x 3.0 m panels on single
+  struts, stopped at different angles because nothing drives them any more.
+- Solar cells with silver bus bars: dark violet on the servicer and the relay satellite, slate on
+  the Earth observer, deep blue on the non-cooperative client. Panel backs are grey.
 - Guidance graphics use teal (approach axis dashed, ring markers, callouts, reticle, HUD labels);
   orange marks actions and warnings; green marks values inside the capture window; red marks
   failures. The approach axis is guidance only, not hardware.
@@ -365,7 +399,8 @@ level, Esc returns to the menu). They run in all three scenarios and start from 
 
 - De-spin: after hard capture with the spinning client (non-cooperative scenario), the servicer
   stops the stack with its roll couple: 44 N m on the servicer and client roll inertias about the
-  common docking axis (4,300 + 23,600 kg m^2), 0.090 deg/s per second, about 13 s from 1.2 deg/s.
+  common docking axis (4,300 + 15,200 kg m^2 with the non-cooperative client), 0.129 deg/s per
+  second, about 9 s from 1.2 deg/s.
   The result appears after the de-spin (SPACE skips it), with a status line and a result row. The
   levels docked to that client start still (`levelFor` drops spin, wobble and roll control).
 - Scenario texts: the docked levels time out because the Sun glares into the servicer cameras (GEO
@@ -492,9 +527,9 @@ level, Esc returns to the menu). They run in all three scenarios and start from 
 - The departure check samples the two-orbit prediction at 360 points (every 8 minutes in the
   graveyard orbit, every 32 s in low Earth orbit), so a slow pass within 5 m between two samples
   can escape the 5 m condition.
-- The client's attitude is prescribed (cones and a spin). Its engine axis is the intermediate axis
-  of inertia (3,500 < 23,600 < 24,200 kg m^2): a torque-free spin about it would be unstable, with
-  an e-folding time of about two minutes at 1.2 deg/s.
+- The client's attitude is prescribed (cones and a spin); the game does not integrate Euler's
+  equations for it. The mass model of the non-cooperative client makes its engine axis the major axis, so the
+  prescribed spin is the stable one.
 - Rigid bodies with fixed inertia; the solar wings and reflectors do not flex.
 - The arm is kinematic: no joint dynamics, compliance or backlash; contact is a geometric clearance
   test, not a force.
