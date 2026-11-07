@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Orbital Refuelling Simulator</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #000; overflow: hidden; }
+    #app { position: fixed; inset: 0; }
+    canvas { display: block; }
+    #overlay {
+      position: fixed; inset: 0; pointer-events: none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: #e8e8e8;
+    }
+    #overlay .label {
+      position: absolute; transform: translate(-50%, -50%);
+      font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #4fd8d0; text-shadow: 0 0 4px #000, 0 0 2px #000;
+      white-space: nowrap;
+    }
+    #overlay .callout {
+      position: absolute; transform: translate(-50%, -50%);
+      font-size: 14px; font-weight: 700; letter-spacing: 0.06em;
+      color: #4fd8d0; text-shadow: 0 0 6px #000, 0 0 3px #000;
+      white-space: nowrap;
+    }
+    #overlay .callout::before {
+      content: ""; display: inline-block; width: 10px; height: 10px;
+      border: 2px solid #4fd8d0; border-radius: 50%; margin-right: 6px;
+      vertical-align: middle;
+    }
+    #overlay .hud-block {
+      position: absolute;
+      font-size: 12px; line-height: 1.5;
+      background: rgba(0,0,0,0.35); padding: 8px 10px; border-radius: 4px;
+      text-shadow: 0 0 3px #000;
+      pointer-events: none;
+    }
+    #overlay .hud-block b { color: #4fd8d0; }
+    #overlay .hud-top-left { top: 12px; left: 12px; max-width: 40vw; }
+    #overlay .hud-top-right { top: 12px; right: 12px; text-align: right; }
+    #overlay .hud-bottom-center { bottom: 284px; right: 12px; min-width: 236px; }
+    #overlay .hud-bottom-right { bottom: 12px; right: 12px; }
+    #overlay .hud-message {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      font-size: 13px; color: #4fd8d0; text-shadow: 0 0 3px #000;
+      background: rgba(0,0,0,0.35); padding: 6px 10px; border-radius: 4px;
+      pointer-events: none;
+    }
+    #overlay .hud-warn {
+      position: absolute; top: 52px; right: 12px;
+      font-size: 12px; color: #ff6a6a; text-shadow: 0 0 3px #000;
+      background: rgba(0,0,0,0.35); padding: 6px 10px; border-radius: 4px;
+      pointer-events: none;
+    }
+    #overlay .hud-warn.hidden { display: none; }
+    #overlay .hud-help {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      max-width: 86vw; font-size: 13px; line-height: 1.7; color: #d8d8d8; text-shadow: 0 0 3px #000;
+      background: rgba(0,0,0,0.78); padding: 14px 18px; border-radius: 6px;
+      pointer-events: none;
+    }
+    #overlay .hud-help { z-index: 6; }
+    #overlay .hud-help.hidden { display: none; }
+    #overlay .hud-menu {
+      position: absolute; inset: 12% 12% auto 12%;
+      font-size: 13px; color: #e8e8e8; text-shadow: 0 0 3px #000;
+      background: rgba(0,0,0,0.75); padding: 12px 16px; border-radius: 6px;
+      pointer-events: none;
+    }
+    #overlay .hud-menu.hidden { display: none; }
+    #overlay .align-row { display: flex; justify-content: space-between; gap: 12px; }
+    #overlay .align-label { color: #b8b8b8; }
+    #overlay .align-value.ok { color: #6aff8a; }
+    #overlay .align-value.warn { color: #ffa24c; }
+    #overlay .align-value.bad { color: #ff6a6a; }
+    #overlay .lvlh-plot { position: absolute; bottom: 12px; right: 12px; }
+    #overlay .hud-message:empty { display: none; }
+    #fatal {
+      position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 10; padding: 8px 12px;
+      background: rgba(160,20,20,0.92); color: #fff; font: 13px ui-monospace, Menlo, monospace; border-radius: 4px;
+    }
+    #overlay .btn {
+      pointer-events: auto; cursor: pointer; font: inherit; color: #ffffff; text-align: left;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.35); border-radius: 6px;
+      padding: 6px 12px; margin: 6px 8px 0 0;
+    }
+    #overlay .btn:hover { background: rgba(255,255,255,0.18); }
+    #overlay .coach-go:empty { display: none; }
+    #overlay .bars { display: flex; align-items: center; gap: 8px; margin: 6px 0 2px; font-size: 11px; color: #b8b8b8; }
+    #overlay .bar { flex: 1; height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden; }
+    #overlay .bar span { display: block; height: 100%; background: #6aff8a; }
+    #overlay .bar span.low { background: #ff6a6a; }
+    #overlay .lights { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+    #overlay .lights:empty { display: none; }
+    #overlay .light { font-size: 12px; padding: 1px 8px; border-radius: 10px; border: 1px solid; }
+    #overlay .light.on { color: #6aff8a; border-color: rgba(106,255,138,0.8); background: rgba(106,255,138,0.12); }
+    #overlay .light.off { color: #ff8a8a; border-color: rgba(255,106,106,0.7); background: rgba(255,106,106,0.08); }
+    #overlay .coach.tone-bad { border-color: rgba(255,106,106,0.85); }
+    #overlay .countdown {
+      position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 96px; font-weight: 300; color: #ffffff; text-shadow: 0 0 12px #000; pointer-events: none;
+    }
+    #overlay .countdown.hidden { display: none; }
+    #overlay .tabs { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 2px 0 10px; }
+    #overlay .tabs .tab { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; opacity: 0.7; }
+    #overlay .tabs .tab.active { opacity: 1; border-color: rgba(79,216,208,0.95); box-shadow: inset 0 0 0 1px rgba(79,216,208,0.5); }
+    #overlay .tabs .tab-where { font-size: 11px; color: #a8a8a8; }
+    #overlay .tabs .tab-hint { align-self: center; font-size: 12px; color: #a8a8a8; margin-left: 4px; }
+    #overlay .cam-badge {
+      position: absolute; top: 12px; left: 12px; max-width: 22vw; white-space: normal !important;
+      font-size: 12px; color: #d8d8d8; background: rgba(0,0,0,0.45); padding: 5px 10px; border-radius: 4px;
+      text-shadow: 0 0 3px #000; white-space: nowrap; pointer-events: none;
+    }
+    #overlay .cam-badge .cam-extra { display: block; color: #a0a0a0; margin-top: 3px; }
+    #overlay .cam-badge { border: 1px solid transparent; transition: border-color 0.4s, box-shadow 0.4s; }
+    #overlay .cam-badge.hint { border-color: rgba(79,216,208,0.95); animation: camhint 1.2s ease-in-out infinite alternate; }
+    #overlay .cam-badge.hint .cam-extra { color: #4fd8d0; }
+    @keyframes camhint { from { box-shadow: 0 0 4px rgba(79,216,208,0.35); } to { box-shadow: 0 0 16px rgba(79,216,208,0.8); } }
+    #overlay .pip-frame {
+      position: absolute; right: 12px; bottom: 12px; border: 1px solid rgba(79,216,208,0.8);
+      border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,0.6); pointer-events: none;
+    }
+    #overlay .pip-frame.hidden { display: none; }
+    #overlay .pip-reticle { position: absolute; inset: 0; }
+    #overlay .pip-label {
+      position: absolute; top: 4px; left: 8px; font-size: 11px; color: #4fd8d0; text-shadow: 0 0 3px #000;
+    }
+    #overlay .level-row { display: flex; align-items: center; gap: 12px; }
+    #overlay .level-row .btn { min-width: 215px; }
+    #overlay .level-best { color: #c8c8c8; font-size: 12px; }
+    #overlay .level-cols { display: flex; flex-wrap: wrap; gap: 6px 28px; }
+    #overlay .level-row .btn.sel { border-color: rgba(79,216,208,0.95); box-shadow: inset 0 0 0 1px rgba(79,216,208,0.5); }
+    #overlay .settings { margin: 10px 0 0; color: #a8a8a8; line-height: 2.1; }
+    #overlay .settings .btn.chip { font-size: 12px; padding: 1px 8px; margin: 0 4px 0 0; line-height: 1.6; }
+    #overlay .settings .btn.chip .key { font-size: 10px; padding: 0 4px; }
+    #overlay .settings .vol { margin: 0 6px 0 2px; color: #e0e0e0; }
+    #overlay .settings.flash { animation: setflash 1.2s ease-out; }
+    @keyframes setflash { from { background: rgba(79,216,208,0.25); } to { background: transparent; } }
+    #overlay .mission-diagram { position: absolute; top: 12px; right: 18px; width: 280px; height: 60px; pointer-events: none; }
+    #overlay .level-col-head { font-size: 12px; color: #a8a8a8; margin: 2px 0 2px; }
+    #overlay .coach.tone-warn { border-color: rgba(255,200,80,0.9); }
+    #overlay .coach-go .btn { margin: 4px 0 2px; }
+    #overlay .reticle {
+      position: absolute; width: 96px; height: 96px; transform: translate(-50%, -50%);
+      border: 1.5px solid rgba(79,216,208,0.85); border-radius: 50%;
+      pointer-events: none;
+    }
+    #overlay .reticle::before, #overlay .reticle::after {
+      content: ""; position: absolute; background: rgba(79,216,208,0.85);
+    }
+    #overlay .reticle::before { left: 50%; top: -14px; bottom: -14px; width: 1.5px; transform: translateX(-50%); }
+    #overlay .reticle::after { top: 50%; left: -14px; right: -14px; height: 1.5px; transform: translateY(-50%); }
+    #overlay .reticle-text {
+      position: absolute; font-size: 12px; line-height: 1.4; color: #4fd8d0;
+      text-shadow: 0 0 3px #000; white-space: nowrap; pointer-events: none;
+    }
+    #overlay .reticle.hidden, #overlay .reticle-text.hidden { display: none; }
+    #overlay .hud-message { top: 150px; }
+    #overlay .coach {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      min-width: 460px; max-width: 46vw; padding: 10px 14px; border-radius: 6px;
+      background: rgba(0,0,0,0.62); border: 1px solid rgba(255,255,255,0.12);
+      font-size: 13px; line-height: 1.5; color: #e8e8e8; text-shadow: 0 0 3px #000; pointer-events: none;
+    }
+    #overlay .coach.tone-act { border-color: rgba(255,162,76,0.9); }
+    #overlay .coach.tone-ok { border-color: rgba(106,255,138,0.6); }
+    #overlay .coach.tone-go { border-color: rgba(80,220,255,0.85); }
+    #overlay .coach-step { font-size: 11px; color: #a8a8a8; }
+    #overlay .coach-main { font-size: 15px; margin: 2px 0; }
+    #overlay .coach-cue { font-size: 18px; color: #ffa24c; margin: 4px 0; }
+    #overlay .coach-cue .times { margin: 0 12px 0 6px; }
+    #overlay .coach-cue .cue-text { font-size: 14px; color: #f0f0f0; }
+    #overlay .coach-others { font-size: 12px; color: #c8c8c8; }
+    #overlay .coach-status { font-size: 11px; color: #a8a8a8; margin-top: 4px; }
+    #overlay .coach-warn { font-size: 12px; color: #ff7a7a; }
+    #overlay .coach-warn:empty, #overlay .coach-others:empty, #overlay .coach-main:empty, #overlay .coach-cue:empty { display: none; }
+    #overlay .coach-progress { height: 5px; background: rgba(255,255,255,0.15); border-radius: 3px; margin: 6px 0 2px; }
+    #overlay .coach-progress.hidden { display: none; }
+    #overlay .coach-bar { height: 100%; width: 0; background: #6aff8a; border-radius: 3px; }
+    #overlay .key {
+      display: inline-block; min-width: 1.3em; padding: 0 6px; margin: 0 2px;
+      border: 1px solid rgba(255,255,255,0.7); border-bottom-width: 2px; border-radius: 4px;
+      font-weight: 400; color: #ffffff; text-align: center; background: rgba(255,255,255,0.08);
+    }
+    #overlay .scope { position: absolute; left: 12px; bottom: 12px; border-radius: 4px; }
+    #overlay .brief {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: min(780px, 88vw); padding: 20px 26px; border-radius: 8px;
+      background: rgba(0,0,0,0.84); border: 1px solid rgba(255,255,255,0.15);
+      font-size: 14px; line-height: 1.65; color: #e0e0e0; pointer-events: auto;
+      max-height: calc(100vh - 16px); overflow-y: auto; box-sizing: border-box;
+    }
+    #overlay .brief.hidden { display: none; }
+    #overlay .brief h1 { font-size: 22px; font-weight: 400; margin: 0 0 10px; color: #ffffff; }
+    #overlay .brief .choices { margin-top: 14px; color: #ffffff; }
+    #overlay .brief .small { font-size: 12px; color: #b0b0b0; }
+    #overlay .brief .grade { font-size: 20px; color: #6aff8a; margin: 4px 0; }
+    #overlay .brief .grade span { font-size: 14px; color: #c8c8c8; }
+    #overlay .brief .bad { color: #ff8a8a; }
+    #overlay .brief table.stats { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+    #overlay .brief table.stats td { padding: 2px 16px 2px 0; }
+    #overlay .brief table.stats tr.head td { color: #a8a8a8; padding-top: 8px; }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="overlay"></div>
+  <script>
+    // Shows any error on screen, so a broken browser feature does not leave a frozen page.
+    (function () {
+      function show(msg) {
+        var d = document.getElementById('fatal');
+        if (!d) { d = document.createElement('div'); d.id = 'fatal'; document.body.appendChild(d); }
+        d.textContent = 'Error: ' + msg;
+      }
+      window.__showFatal = show;
+      window.addEventListener('error', function (e) {
+        show(e.message + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : ''));
+      });
+      window.addEventListener('unhandledrejection', function (e) { show(String(e.reason)); });
+    })();
+  </script>
+  <script type="module" src="./src/main.js" onerror="window.__showFatal('could not load src/main.js')"></script>
+</body>
+</html>
