@@ -2,8 +2,6 @@
 
 *Claude Opus 5.5 (max) and DeepSeek V4.1 Flash.*
 
-[![Watch the trailer on YouTube](https://img.youtube.com/vi/JuXeH5DBF8w/hqdefault.jpg)](https://youtu.be/JuXeH5DBF8w)
-
 A browser game on the last metres of a fictional on-orbit servicing mission. Capture a client
 satellite by pushing a probe into its engine nozzle, connect a refuelling arm to its service valve,
 transfer propellant and fly away safely. Each challenge lasts one or two minutes, and the motion of
